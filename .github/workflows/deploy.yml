@@ -1,4 +1,4 @@
-name: Deploy to Deno Deploy (Experimental)
+name: Deploy to Vercel
 
 on:
   push:
@@ -7,15 +7,11 @@ on:
 
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy to Vercel
     runs-on: ubuntu-latest
 
-    permissions:
-      id-token: write # Cần thiết cho việc xác thực với Deno Deploy
-      contents: read  # Cần thiết để clone repository
-
     steps:
-      - name: Clone repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -23,38 +19,16 @@ jobs:
         with:
           node-version: 18 # Hoặc phiên bản Node.js bạn muốn
 
-      - name: Build Frontend
-        # Cài đặt và build frontend
-        run: |
-          npm install --prefix frontend
-          npm run build --prefix frontend
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
 
-      - name: Install Vercel CLI (để chạy server Node.js)
-        run: npm install -g vercel
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Start Node.js Server as a Background Process
-        # Chạy server backend và phục vụ các file frontend đã build
-        # Chạy dưới dạng tiến trình nền để các bước sau có thể tiếp tục
-        run: vercel dev --listen 3000 &
-        working-directory: ./backend
-        env:
-          NODE_ENV: production
+      - name: Build Project
+        # Chạy script build từ package.json gốc
+        run: npm run build
 
-      - name: Wait for server to be ready
-        run: sleep 15 # Đợi 15 giây để server Node.js khởi động
-
-      - name: Install Deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v1.x
-
-      - name: Deploy using Deno Deploy Proxy
-        # Sử dụng một proxy đơn giản để chuyển tiếp request đến server Node.js đang chạy
-        uses: denoland/deployctl@v1
-        with:
-          project: "ptcuong-110-chitchat-re-98"
-          entrypoint: "https://deno.land/x/simple_proxy@1.0.0/mod.ts"
-          root: "."
-          env:
-            # URL của server Node.js đang chạy trên cùng máy ảo GitHub Actions
-            BACKEND_URL: "http://localhost:3000"
+      - name: Deploy Project Artifacts to Vercel
+        # Deploy thư mục gốc, Vercel sẽ đọc cấu hình từ file .vercel/project.json
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
