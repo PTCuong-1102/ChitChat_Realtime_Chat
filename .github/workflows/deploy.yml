@@ -1,9 +1,9 @@
-name: Deploy
+name: Deploy to Deno Deploy (Experimental)
+
 on:
   push:
-    branches: main
-  pull_request:
-    branches: main
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -11,34 +11,50 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      id-token: write # Needed for auth with Deno Deploy
-      contents: read # Needed to clone the repository
+      id-token: write # Cần thiết cho việc xác thực với Deno Deploy
+      contents: read  # Cần thiết để clone repository
 
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18 # Hoặc phiên bản Node.js bạn muốn
+
+      - name: Build Frontend
+        # Cài đặt và build frontend
+        run: |
+          npm install --prefix frontend
+          npm run build --prefix frontend
+
+      - name: Install Vercel CLI (để chạy server Node.js)
+        run: npm install -g vercel
+
+      - name: Start Node.js Server as a Background Process
+        # Chạy server backend và phục vụ các file frontend đã build
+        # Chạy dưới dạng tiến trình nền để các bước sau có thể tiếp tục
+        run: vercel dev --listen 3000 &
+        working-directory: ./backend
+        env:
+          NODE_ENV: production
+
+      - name: Wait for server to be ready
+        run: sleep 15 # Đợi 15 giây để server Node.js khởi động
+
       - name: Install Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
+          deno-version: v1.x
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-
-      - name: Install step
-        run: "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend"
-
-      - name: Build step
-        run: "npm run build"
-
-      - name: Upload to Deno Deploy
+      - name: Deploy using Deno Deploy Proxy
+        # Sử dụng một proxy đơn giản để chuyển tiếp request đến server Node.js đang chạy
         uses: denoland/deployctl@v1
         with:
           project: "ptcuong-110-chitchat-re-98"
-          entrypoint: "https://deno.land/std@0.217.0/http/file_server.ts"
-          root: "backend/dist"
-          
-          
+          entrypoint: "https://deno.land/x/simple_proxy@1.0.0/mod.ts"
+          root: "."
+          env:
+            # URL của server Node.js đang chạy trên cùng máy ảo GitHub Actions
+            BACKEND_URL: "http://localhost:3000"
