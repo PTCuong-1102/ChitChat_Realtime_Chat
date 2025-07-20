@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
-import { Bot, LogOut, MessageSquare, Settings, User } from "lucide-react";
+import { Bot, LogOut, MessageSquare, Settings, User, UserPlus } from "lucide-react";
+import FriendRequestsDropdown from "./FriendRequestsDropdown";
 
 const Navbar = () => {
   const { logout, authUser } = useAuthStore();
@@ -35,6 +36,13 @@ const Navbar = () => {
 
             {authUser && (
               <>
+                <Link to={"/find-friends"} className={`btn btn-sm gap-2`}>
+                  <UserPlus className="size-5" />
+                  <span className="hidden sm:inline">Find Friends</span>
+                </Link>
+
+                <FriendRequestsDropdown />
+
                 <Link to={"/chatbots"} className={`btn btn-sm gap-2`}>
                   <Bot className="size-5" />
                   <span className="hidden sm:inline">Chatbots</span>

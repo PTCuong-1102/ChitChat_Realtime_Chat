@@ -90,6 +90,39 @@ export const deleteChatbot = async (req, res) => {
   }
 };
 
+export const getChatbotMessages = async (req, res) => {
+  try {
+    const { id: chatbotId } = req.params;
+    const userId = req.user._id;
+
+    // Find chatbot to ensure user has access
+    const chatbot = await Chatbot.findOne({
+      _id: chatbotId,
+      $or: [
+        { ownerId: userId },
+        { isDefault: true }
+      ]
+    });
+
+    if (!chatbot) {
+      return res.status(404).json({ error: "Chatbot not found" });
+    }
+
+    // Get conversation history - don't populate senderId since it can be either User or Chatbot
+    const messages = await Message.find({
+      $or: [
+        { senderId: userId, receiverId: chatbotId },
+        { senderId: chatbotId, receiverId: userId }
+      ]
+    }).sort({ createdAt: 1 });
+
+    res.status(200).json(messages);
+  } catch (error) {
+    console.error("Error fetching chatbot messages:", error);
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+};
+
 export const sendMessageToChatbot = async (req, res) => {
   try {
     const { id: chatbotId } = req.params;
@@ -116,6 +149,7 @@ export const sendMessageToChatbot = async (req, res) => {
     // Save user message
     const userMessage = new Message({
       senderId: userId,
+      senderModel: 'User',
       receiverId: chatbotId,
       text: text,
     });
@@ -148,6 +182,7 @@ export const sendMessageToChatbot = async (req, res) => {
     // Save AI response
     const aiMessage = new Message({
       senderId: chatbotId,
+      senderModel: 'Chatbot',
       receiverId: userId,
       text: aiResponse,
     });

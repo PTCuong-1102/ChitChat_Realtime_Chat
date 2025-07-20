@@ -13,6 +13,8 @@ import { createDefaultChatbot } from "./lib/defaultChatbot.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import chatbotRoutes from "./routes/chatbot.route.js";
+import conversationRoutes from "./routes/conversation.route.js";
+import friendRoutes from "./routes/friend.route.js";
 import { app, server } from "./lib/socket.js";
 
 const PORT = process.env.PORT;
@@ -30,6 +32,8 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/chatbots", chatbotRoutes);
+app.use("/api/conversations", conversationRoutes);
+app.use("/api/friends", friendRoutes);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));

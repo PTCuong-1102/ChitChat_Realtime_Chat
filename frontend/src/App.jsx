@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
 import ChatbotManagerPage from "./pages/ChatbotManagerPage";
+import FindFriendsPage from "./pages/FindFriendsPage";
 
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./store/useAuthStore";
@@ -45,6 +46,7 @@ const App = () => {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
         <Route path="/chatbots" element={authUser ? <ChatbotManagerPage /> : <Navigate to="/login" />} />
+        <Route path="/find-friends" element={authUser ? <FindFriendsPage /> : <Navigate to="/login" />} />
       </Routes>
 
       <Toaster />
