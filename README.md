@@ -1,7 +1,5 @@
 # 🤖 ChitChat - AI-Powered Real-time Chat Application
 
-![ChitChat Demo](/frontend/public/screenshot-for-readme.png)
-
 A modern, full-stack real-time chat application with integrated AI chatbot capabilities. Chat with friends and AI assistants powered by multiple Large Language Models (LLMs) in one seamless platform.
 
 ## ✨ Features
