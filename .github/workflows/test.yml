@@ -1,0 +1,56 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # Backend Tests
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run backend tests
+        working-directory: ./backend
+        run: |
+          # Uncomment when you add test scripts to backend/package.json
+          # npm test
+          echo "Backend tests ready to run when test script is added"
+
+      # Frontend Tests  
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run frontend tests
+        working-directory: ./frontend
+        run: |
+          # Uncomment when you add test scripts to frontend/package.json
+          # npm test
+          echo "Frontend tests ready to run when test script is added"
+
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v3
+        if: matrix.node-version == 18
+        with:
+          files: ./backend/coverage/lcov.info,./frontend/coverage/lcov.info
+          fail_ci_if_error: false

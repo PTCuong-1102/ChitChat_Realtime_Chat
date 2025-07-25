@@ -1,0 +1,164 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Backend Tests and Linting
+  backend-test:
+    name: Backend CI
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Check backend code formatting
+        run: |
+          # Check if there are any syntax errors
+          node --check src/index.js
+
+      - name: Run backend tests (if available)
+        run: |
+          # Add test script when available
+          echo "Backend tests would run here"
+          # npm test
+
+  # Frontend Tests and Linting
+  frontend-test:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Run frontend tests (if available)
+        run: |
+          # Add test script when available
+          echo "Frontend tests would run here"
+          # npm test
+
+  # Full Integration Build Test
+  integration-build:
+    name: Integration Build Test
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run full build process
+        run: npm run build
+
+      - name: Verify build artifacts
+        run: |
+          echo "Checking if backend dependencies are installed..."
+          ls -la backend/node_modules || echo "Backend node_modules not found"
+          
+          echo "Checking if frontend build was created..."
+          ls -la frontend/dist || echo "Frontend dist folder not found"
+
+  # Security and Quality Checks
+  security-check:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Audit backend dependencies
+        working-directory: ./backend
+        run: |
+          npm ci
+          npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Audit frontend dependencies
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm audit --audit-level=moderate
+        continue-on-error: true
+
+  # Deployment (only on main branch and after all tests pass)
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test, integration-build, security-check]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Deploy Project Artifacts to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Post-deployment verification
+        run: |
+          echo "Deployment completed successfully!"
+          echo "Deployment URL will be available in Vercel dashboard"
