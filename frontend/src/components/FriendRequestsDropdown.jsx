@@ -32,7 +32,7 @@ const FriendRequestsDropdown = () => {
     try {
       const res = await axiosInstance.get("/friends/requests");
       setRequests(res.data);
-    } catch (error) {
+    } catch {
       toast.error("Failed to fetch friend requests");
     } finally {
       setIsLoading(false);
