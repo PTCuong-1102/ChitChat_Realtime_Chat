@@ -133,7 +133,7 @@ const FindFriendsPage = () => {
               ) : (
                 <div className="text-center py-8 text-base-content/70">
                   <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No users found matching "{searchQuery}"</p>
+                  <p>No users found matching &quot;{searchQuery}&quot;</p>
                 </div>
               )
             ) : (

@@ -87,35 +87,7 @@ const ChatContainer = () => {
     authUser: authUser?._id
   });
 
-  // Safe fallbacks for data handling
-  if (!authUser) {
-    return null;
-  }
-
-  // Error boundary for chatbot rendering
-  if (contactType === "chatbot" && !selectedContact) {
-    return (
-      <div className="flex-1 flex flex-col overflow-auto">
-        <div className="flex-1 flex items-center justify-center">
-          <p>No chatbot selected</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Debug logging for troubleshooting
-  console.log("ChatContainer Render Debug:", {
-    contactType,
-    selectedContact: selectedContact ? {
-      _id: selectedContact._id,
-      name: selectedContact.name || selectedContact.fullName,
-      type: typeof selectedContact
-    } : null,
-    messagesArray: Array.isArray(messages),
-    messagesLength: messages?.length,
-    isLoading: isMessagesLoading
-  });
-
+  // All useEffect hooks must be called before any early returns
   useEffect(() => {
     console.log("ChatContainer useEffect triggered with:", {
       selectedConversation: selectedConversation?._id,
@@ -156,6 +128,35 @@ const ChatContainer = () => {
       console.error("Error in scroll useEffect:", error);
     }
   }, [messages]);
+
+  // Debug logging for troubleshooting
+  console.log("ChatContainer Render Debug:", {
+    contactType,
+    selectedContact: selectedContact ? {
+      _id: selectedContact._id,
+      name: selectedContact.name || selectedContact.fullName,
+      type: typeof selectedContact
+    } : null,
+    messagesArray: Array.isArray(messages),
+    messagesLength: messages?.length,
+    isLoading: isMessagesLoading
+  });
+
+  // Safe fallbacks for data handling - now after all hooks
+  if (!authUser) {
+    return null;
+  }
+
+  // Error boundary for chatbot rendering
+  if (contactType === "chatbot" && !selectedContact) {
+    return (
+      <div className="flex-1 flex flex-col overflow-auto">
+        <div className="flex-1 flex items-center justify-center">
+          <p>No chatbot selected</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isMessagesLoading) {
     return (

@@ -25,7 +25,7 @@ const ChatbotManagerPage = () => {
       setFormData({ name: "", model: "", apiKey: "" });
       setShowForm(false);
       setShowApiKey(false);
-    } catch (error) {
+    } catch {
       // Error handled in store
     }
   };
